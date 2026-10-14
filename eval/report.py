@@ -650,6 +650,9 @@ def update_readme(root, tables, spend):
             headline += "; its bootstrap interval is censored at the tested grid boundary"
         headline += "."
     headline += " This is **3 seeds per arm**, not a broad algorithm benchmark. [Comparison](results/report/ablation.csv)."
+    getup_seeds = sorted((r for r in tables["getup"] if r["backend"] == "mujoco" and r["seed"] != "all"),
+                         key=lambda r: r["seed"])
+    getup_counts = "; ".join(f"seed {r['seed']}: {r['successes']}/{r['trials']}" for r in getup_seeds)
     lines = ["| Policy | Seeds | J50 by seed (N·s) | Mean tracking MAE: forward / lateral / yaw |",
              "|---|---:|---|---|"]
     for arm, label in (("go1-walk", "Go1, no training pushes"), ("go1-walk-push", "Go1, training pushes"),
@@ -671,7 +674,8 @@ def update_readme(root, tables, spend):
         "[survival curves](results/report/push_seeds.svg), [raw trials](results/eval/).",
         "",
         f"Go1 get-up succeeds on **{getup['successes']}/{getup['trials']} random drops ({getup['success']:.1%})**. "
-        f"The median recovery time among successes is **{getup['median_recovery_seconds']:.3f} s**. "
+        f"Per seed: **{getup_counts}**. "
+        f"The median time to the qualifying upright interval among successes is **{getup['median_recovery_seconds']:.3f} s**. "
         "[Per-seed results](results/report/getup.csv); already-upright training-reset starts are reported separately "
         "in the [diagnosis](results/report/getup_diagnostic.csv).",
         "",

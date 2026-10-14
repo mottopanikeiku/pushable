@@ -307,7 +307,7 @@ def terrain_tables(rows):
         for row in trials:
             if row["failure"] is not None:
                 failures[row["failure"]] += 1
-        falls = sum(r["failure"] == "fall" for r in trials)
+        falls = sum(r.get("fell", r["failure"] == "fall") for r in trials)
         result = {
             "backend": "mujoco", "seeds": sorted({r["seed"] for r in trials}),
             "trials": len(trials), "completed": sum(r["completed"] for r in trials),

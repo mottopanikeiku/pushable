@@ -33,6 +33,7 @@ Go1 switches to its full-collision get-up model after a sustained fall and back 
 - **G1 disappeared below the floor:** feet-only walking contacts remained active after falling. Transfer to the full-collision model and label the inactive policy plainly.
 - **Steering stopped after using the slider:** its focus swallowed all keyboard input. Letter steering now works while native slider/select arrows remain available.
 - **Landscape phone buttons were clipped:** a fixed minimum page height exceeded the viewport. Controls now fit the short viewport without scrolling.
+- **Touch turn buttons ignored keyboard activation:** pointer-only handlers did not implement their button semantics. Enter/Space now turn while held; key release or blur stops turning.
 - **Prop coordinates entered motor controls:** composing free bodies extends qpos. Reset now copies only the robot's actuated coordinates into ctrl.
 
 ## Rendering and recording

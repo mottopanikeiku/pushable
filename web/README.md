@@ -45,6 +45,8 @@ With an owned headless Chromium listening for debugging on port 9228 and the bui
 
 Recording requires FFmpeg with the `libopenh264` encoder. Full-range screenshot JPEGs are explicitly converted to limited-range YUV420 for H.264 Main, with QP bounds fixed at 26, rate control off and no frame skipping. The 560-pixel-wide GIF uses 10 fps and a 96-colour palette. The two files together must be below 5 MB before the script publishes them.
 
+The committed [MP4](media/hero.mp4) and [GIF](media/hero.gif) show the production build. [Capture provenance](media/hero.json) records the fixed sequence, policy hashes and observed recovery transitions. [Viewport captures](media/screenshots.json) cover both robots at 1280 × 800 and 390 × 844.
+
 ## Parity
 
 `npm test` replays every `results/parity/*.json` using the same WASM engine as the browser. It checks the policy file hash, observation vectors, deterministic network actions, motor targets, and resulting positions/velocities. It prints maximum absolute errors per policy. The test applies the recorded action **after** comparing inference, isolating float32 matrix-multiplication differences from contact divergence. It uses fixture-provided absolute/relative tolerances for observations and actions. Empty or shortened fixtures are errors, not skipped tests.

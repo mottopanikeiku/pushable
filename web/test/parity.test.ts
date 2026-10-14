@@ -28,14 +28,15 @@ for (const id of ['go1-walk-push-s0', 'go1-walk-s0', 'go1-getup-s0', 'g1-walk-s0
   assert.ok(fixtures.includes(`${id}.json`), `Missing demo parity fixture: ${id}`);
 }
 
+const reportPath = process.env.PUSHABLE_PARITY_REPORT;
 const checks: Record<string, {
   policy: string; policy_sha256: string; fixture: string; backend: 'wasm'; control_steps: number;
   observation_max_abs: number; action_max_abs: number;
 }> = {};
 
 after(async () => {
-  // Keep the previous report unless every fixture passes all assertions.
-  if (Object.keys(checks).length !== fixtures.length) return;
+  // Reports are opt-in and only replaced after every fixture passes.
+  if (!reportPath || Object.keys(checks).length !== fixtures.length) return;
   const packageInfo = JSON.parse(await readFile(
     new URL('./package.json', import.meta.resolve('@mujoco/mujoco')), 'utf8'));
   const report = {
@@ -56,7 +57,7 @@ after(async () => {
     checks,
     wall_seconds: (performance.now() - started) / 1000,
   };
-  const destination = resolve(root, 'results/parity-checks/wasm.json');
+  const destination = resolve(reportPath);
   await mkdir(dirname(destination), { recursive: true });
   await writeFile(destination, JSON.stringify(report, null, 2) + '\n');
 });
@@ -131,7 +132,7 @@ for (const name of fixtures) {
       physics.dispose();
     }
     assert.deepEqual(mismatches, [], mismatches.join('\n'));
-    checks[id] = {
+    if (reportPath) checks[id] = {
       policy: fixture.policy, policy_sha256: policyHash, fixture: `results/parity/${name}`,
       backend: 'wasm', control_steps: fixture.frames.length,
       observation_max_abs: max.max_obs_err, action_max_abs: max.max_action_err,

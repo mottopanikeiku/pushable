@@ -18,7 +18,7 @@ Walking tasks and PPO settings: [MuJoCo Playground](https://github.com/google-de
 - **Experiments** ([eval/run.py](eval/run.py), [eval/terrain.py](eval/terrain.py)): shove recovery, tracking, fallen starts and terrain cross-tests.
 - **Training and reports** ([train/app.py](train/app.py), [eval/report.py](eval/report.py)): exported actors, run manifests and regenerated tables.
 
-**In the browser.** Landscape, movable props, throws and a terrain patch add play. Policies never saw props or throws; the rough-trained dog saw the supplied heightfield. Added objects affect robots only on contact. Labels name the active policy and training scene. Browser-only G1 fall collisions prevent sinking.
+**In the browser.** Landscape, movable props, throws and a terrain patch add play. Policies never saw props or throws; the rough-trained dog saw the supplied heightfield. Robot mechanisms and training parameters are unchanged. Labels name the active policy and training scene. Browser-only G1 fall collisions prevent sinking.
 
 ## Results
 
@@ -67,7 +67,7 @@ NVIDIA L4 training: flat-ground dog 12–14 minutes ($0.22–0.25), dog get-up 1
 - Simulation only; nothing here ran on a real robot.
 - Walking evaluation retains Playground's feet-only floor contacts; tilt detects most falls. Browser fall collisions and props are separate additions.
 - One of three get-up seeds rarely gets up (3 of 187 fallen starts); I report it rather than retrain it.
-- The humanoid tracks turning commands poorly. Its demo uses the last checkpoint before a time limit. The custom get-up experiment failed; no G1 recovery is shown.
+- The humanoid tracks turning commands poorly. Its demo uses the last checkpoint before a time limit. The initial custom get-up experiment failed; no G1 recovery is shown.
 - Demo seeds were chosen before evaluation; the terrain comparison tests one training heightfield, not unseen-ground generalization. [Configuration history](docs/evaluation.md).
 
 ## Prior work

@@ -115,3 +115,4 @@
 {"event": "end", "id": "pushable-1791976770475", "time": "2026-10-14T04:26:40", "wall_minutes": 7.16, "charged_upper": 0.0208, "exit": 0}
 {"event": "end", "id": "pushable-1791976676149", "time": "2026-10-14T04:28:44", "wall_minutes": 10.81, "charged_upper": 0.0314, "exit": 0}
 {"event": "end", "id": "pushable-1791976770477", "time": "2026-10-14T04:28:57", "wall_minutes": 9.46, "charged_upper": 0.0274, "exit": 0}
+{"event": "end", "id": "pushable-1791977024846", "time": "2026-10-14T04:49:37", "wall_minutes": 25.88, "charged_upper": 0.4542, "exit": 0}

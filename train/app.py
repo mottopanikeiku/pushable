@@ -212,19 +212,26 @@ def train_one(env_name, seed, run_id, stage, pushes, provenance, benchmark_secon
     return archive_files(exported, out)
 
 
-@app.function(image=image, cpu=CPU, memory=MEMORY, timeout=TIMEOUT,
-              max_containers=1, volumes={"/runs": volume})
+@app.function(image=image, gpu=None if GPU == "none" else GPU, cpu=CPU,
+              memory=MEMORY, timeout=TIMEOUT, max_containers=1, volumes={"/runs": volume})
 def evaluate(provenance, policy="", backend="mujoco"):
-    os.environ["JAX_PLATFORMS"] = "cpu"
-    provenance = {**provenance, "modal_app_id": app.app_id}
+    if GPU == "none":
+        os.environ["JAX_PLATFORMS"] = "cpu"
+    provenance = {**provenance, "modal_app_id": app.app_id, "gpu": GPU}
     setup_playground()
     from eval.run import run_suite
     out = Path("/runs/evaluation")
     out.mkdir(exist_ok=True)
-    run_suite(root=Path("/workspace"), output=out, backend=backend,
-              policy_filter=policy or None, provenance=provenance)
+    run_dir = run_suite(root=Path("/workspace"), output=out, backend=backend,
+                        policy_filter=policy or None, provenance=provenance)
+    import gzip
+    import shutil
+    for path in list(run_dir.rglob("trials.jsonl")) + list(run_dir.rglob("trials.csv")):
+        with path.open("rb") as source, gzip.open(path.with_suffix(path.suffix + ".gz"), "wb") as destination:
+            shutil.copyfileobj(source, destination)
+        path.unlink()
     volume.commit()
-    return archive_files([p for p in out.rglob("*") if p.is_file()], out)
+    return archive_files([p for p in run_dir.rglob("*") if p.is_file()], out)
 
 
 @app.function(image=image, gpu=None if GPU == "none" else GPU, cpu=CPU,

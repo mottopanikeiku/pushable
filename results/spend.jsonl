@@ -78,3 +78,5 @@
 {"event": "end", "id": "pushable-1791972621308", "time": "2026-10-14T03:10:30", "wall_minutes": 0.15, "charged_upper": 0.0004, "exit": 0}
 {"event": "end", "id": "pushable-1791972621311", "time": "2026-10-14T03:10:32", "wall_minutes": 0.18, "charged_upper": 0.0005, "exit": 0}
 {"event": "end", "id": "pushable-1791972621307", "time": "2026-10-14T03:10:33", "wall_minutes": 0.2, "charged_upper": 0.0006, "exit": 0}
+{"event": "start", "id": "pushable-1791973432540", "time": "2026-10-14T03:23:52", "project": "pushable", "gpu": "L4", "gpus_per_container": 1, "containers": 1, "cores": 2.0, "mem_gib": 8.0, "minutes": 30.0, "booked": 0.5266, "command": ["modal", "run", "train/app.py", "--stage", "train", "--env", "Go1Getup", "--seed", "0", "--run-id", "go1-getup-s0-t200m", "--num-timesteps", "200000000"]}
+{"event": "end", "id": "pushable-1791973432540", "time": "2026-10-14T03:39:46", "wall_minutes": 15.91, "charged_upper": 0.2792, "exit": 0}

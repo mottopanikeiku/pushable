@@ -521,8 +521,16 @@ def run_tables(root):
             continue
         sources.append({"path": str(path.relative_to(root)), "sha256": _sha(path)})
         if record["stage"] == "train":
-            training.append({key: record.get(key) for key in
-                             ("id", "env", "seed", "gpu", "minutes", "usd_upper", "final_reward")})
+            config = record["ppo_config"]
+            update_steps = config["batch_size"] * config["unroll_length"] * config["num_minibatches"] * config["action_repeat"]
+            epochs = max(config["num_evals"] - 1, 1) * max(config["num_resets_per_eval"], 1)
+            epoch_steps = math.ceil(config["num_timesteps"] / (epochs * update_steps)) * update_steps
+            reset_seconds = (epoch_steps / config["num_envs"] * record["environment_config"]["ctrl_dt"]
+                             if config["num_resets_per_eval"] else None)
+            training.append({**{key: record.get(key) for key in
+                                ("id", "env", "seed", "gpu", "minutes", "usd_upper", "final_reward", "trained_steps")},
+                             "requested_steps": config["num_timesteps"],
+                             "explicit_reset_interval_seconds": reset_seconds})
         else:
             booking = record["spend_guard"]["start"]
             per_second = booking["booked"] / (booking["minutes"] * 60)
@@ -574,12 +582,16 @@ def getup_diagnostic_table(root, rng, replicates):
         metadata = manifest["policy_metadata"][name]
         outcomes = [r["success"] for r in trials]
         times = [r["recovery_time"] for r in trials if r["success"]]
+        nominal = [r for r in trials if r.get("nominal_start", False)]
+        dropped = [r for r in trials if not r.get("nominal_start", False)]
         ci = _interval(_bootstrap_outcomes({0: outcomes}, rng, replicates))
         result.append({
             "run_id": manifest["run_id"], "training_run_id": metadata["spec"]["run_id"],
             "policy_sha256": metadata["policy_sha256"], "backend": manifest["backend"],
             "initialization": invocation.get("getup_initialization", "drop"), "seed": 0,
             "trials": len(trials), "successes": sum(outcomes), "success": float(np.mean(outcomes)),
+            "nominal_trials": len(nominal), "nominal_successes": sum(r["success"] for r in nominal),
+            "dropped_trials": len(dropped), "dropped_successes": sum(r["success"] for r in dropped),
             "ci_low": ci[0], "ci_high": ci[1],
             "median_recovery_seconds": float(np.median(times)) if times else None,
             "software_failures": sum(r.get("failure") == "simulator_error" for r in trials),
@@ -614,9 +626,11 @@ def generate_report(inputs, output, *, bootstrap_replicates=BOOTSTRAP_REPLICATES
               "j50": thresholds, "ablation": ablation, "getup": getup, "gap": gap,
               "training": training, "benchmarks": benchmarks, "getup_diagnostic": diagnostic}
     columns = {
-        "training": ("id", "env", "seed", "gpu", "minutes", "usd_upper", "final_reward"),
+        "training": ("id", "env", "seed", "gpu", "minutes", "usd_upper", "final_reward",
+                     "requested_steps", "trained_steps", "explicit_reset_interval_seconds"),
         "getup_diagnostic": ("run_id", "training_run_id", "policy_sha256", "backend", "initialization", "seed",
-                            "trials", "successes", "success", "ci_low", "ci_high", "median_recovery_seconds",
+                            "trials", "successes", "success", "nominal_trials", "nominal_successes",
+                            "dropped_trials", "dropped_successes", "ci_low", "ci_high", "median_recovery_seconds",
                             "software_failures", "raw"),
         "benchmarks": ("id", "gpu", "steps_per_second", "measurement_seconds", "warmup_seconds",
                        "minutes", "usd_upper", "charged_usd_upper_per_million_steps",

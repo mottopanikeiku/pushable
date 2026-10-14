@@ -7,6 +7,9 @@
   "status": "failed",
   "git_sha": "535cc3a27c461d7dbb18feec9deaad309c8b7444",
   "git_dirty": false,
+  "source_manifest": "source-manifest.json",
+  "last_persisted_steps": 181043200,
+  "interruption": "Modal's 2700-second timeout ended the default 200M-step run before completion. Curve and full source manifest were recovered without resuming or selecting a checkpoint.",
   "spend_guard": {
     "start": {
       "event": "start",

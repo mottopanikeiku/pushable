@@ -132,8 +132,9 @@ def train_one(env_name, seed, run_id, stage, pushes, provenance, benchmark_secon
     curve = []
 
     def persist():
+        from train.export import _json
         manifest["wall_seconds"] = time.monotonic() - start
-        (out / "manifest.json").write_text(json.dumps(manifest, indent=2, allow_nan=True) + "\n")
+        (out / "manifest.json").write_text(json.dumps(_json(manifest), indent=2, allow_nan=False) + "\n")
         if curve:
             keys = ["steps", "wall_seconds"] + sorted(set().union(*(r.keys() for r in curve)) - {"steps", "wall_seconds"})
             with (out / "curve.csv").open("w") as f:

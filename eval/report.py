@@ -550,6 +550,47 @@ def run_tables(root):
     return training, benchmarks, spend, sources
 
 
+def getup_diagnostic_table(root, rng, replicates):
+    """Keep original and revised getup configurations separate, including history."""
+    result, sources = [], []
+    paths = set()
+    for folder in ("eval", "getup-diagnostic"):
+        paths.update((root / "results" / folder).glob("*/*/go1-getup-s0/trials.jsonl*"))
+    for path in sorted(paths):
+        manifest_path = path.parent / "manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        invocation = json.loads((path.parent.parent.parent / "manifest.json").read_text())
+        if manifest.get("status") != "complete" or invocation.get("status") != "complete":
+            continue
+        if (manifest.get("superseded") or invocation.get("superseded")) and not invocation.get("keep_in_diagnostics"):
+            continue
+        opener = gzip.open if path.suffix == ".gz" else open
+        with opener(path, "rt") as stream:
+            trials = [json.loads(line) for line in stream]
+        trials = [r for r in trials if r["suite"] == "getup" and r["seed"] == 0]
+        if not trials:
+            continue
+        name = trials[0]["policy"]
+        metadata = manifest["policy_metadata"][name]
+        outcomes = [r["success"] for r in trials]
+        times = [r["recovery_time"] for r in trials if r["success"]]
+        ci = _interval(_bootstrap_outcomes({0: outcomes}, rng, replicates))
+        result.append({
+            "run_id": manifest["run_id"], "training_run_id": metadata["spec"]["run_id"],
+            "policy_sha256": metadata["policy_sha256"], "backend": manifest["backend"],
+            "initialization": invocation.get("getup_initialization", "drop"), "seed": 0,
+            "trials": len(trials), "successes": sum(outcomes), "success": float(np.mean(outcomes)),
+            "ci_low": ci[0], "ci_high": ci[1],
+            "median_recovery_seconds": float(np.median(times)) if times else None,
+            "software_failures": sum(r.get("failure") == "simulator_error" for r in trials),
+            "raw": str(path.relative_to(root)),
+        })
+        sources.append({"raw": str(path.relative_to(root)), "raw_sha256": _sha(path),
+                        "manifest": str(manifest_path.relative_to(root)),
+                        "manifest_sha256": _sha(manifest_path)})
+    return result, sources
+
+
 def generate_report(inputs, output, *, bootstrap_replicates=BOOTSTRAP_REPLICATES, bootstrap_seed=BOOTSTRAP_SEED):
     """Return summary dict; all numbers derive from supplied JSONL and manifests."""
     if bootstrap_replicates < 1:
@@ -565,14 +606,21 @@ def generate_report(inputs, output, *, bootstrap_replicates=BOOTSTRAP_REPLICATES
     getup = getup_table(rows, rng, bootstrap_replicates)
     gap = gap_table(rows, fits)
     training, benchmarks, spend, run_sources = run_tables(Path(__file__).resolve().parents[1])
+    diagnostic, diagnostic_sources = getup_diagnostic_table(Path(__file__).resolve().parents[1], rng, bootstrap_replicates)
+    provenance.extend(diagnostic_sources)
     provenance.extend(run_sources)
     tables = {"tracking": tracking, "tracking_commands": commands, "push": push,
               "push_seeds": seed_push, "j50_seeds": seed_thresholds,
               "j50": thresholds, "ablation": ablation, "getup": getup, "gap": gap,
-              "training": training, "benchmarks": benchmarks}
+              "training": training, "benchmarks": benchmarks, "getup_diagnostic": diagnostic}
     columns = {
         "training": ("id", "env", "seed", "gpu", "minutes", "usd_upper", "final_reward"),
-        "benchmarks": ("id", "gpu", "steps_per_second", "measurement_seconds", "warmup_seconds", "usd_upper_per_million_steps", "scope"),
+        "getup_diagnostic": ("run_id", "training_run_id", "policy_sha256", "backend", "initialization", "seed",
+                            "trials", "successes", "success", "ci_low", "ci_high", "median_recovery_seconds",
+                            "software_failures", "raw"),
+        "benchmarks": ("id", "gpu", "steps_per_second", "measurement_seconds", "warmup_seconds",
+                       "minutes", "usd_upper", "charged_usd_upper_per_million_steps",
+                       "usd_upper_per_million_steps", "scope"),
         "tracking": ("backend", "arm", "seed", "trials", "completed", "completion", "samples", "forward_mae", "lateral_mae", "yaw_mae", "complete_grid", "standard_protocol"),
         "tracking_commands": ("backend", "arm", "seed", "command", "trials", "completed", "completion", "samples", "forward_mae", "lateral_mae", "yaw_mae"),
         "push": ("backend", "arm", "impulse", "trials", "successes", "seeds", "survival", "monotone_survival", "ci_low", "ci_high", "complete_grid", "three_seed_protocol", "balanced_seeds"),

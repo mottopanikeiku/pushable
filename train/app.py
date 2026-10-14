@@ -263,10 +263,21 @@ def evaluate(provenance, policy="", backend="mujoco", diagnostic=False, initiali
 
 @app.function(image=image, cpu=CPU, memory=MEMORY, timeout=TIMEOUT,
               max_containers=1, volumes={"/runs": volume})
-def fetch_evaluation(remote_run):
-    """Download already-committed trials without repeating their simulation."""
+def fetch_artifacts(remote_run, training=False):
+    """Download committed diagnostics without repeating training or simulation."""
     if not remote_run or Path(remote_run).name != remote_run:
-        raise ValueError("remote_run must name one evaluation directory")
+        raise ValueError("remote_run must name one run directory")
+    if training:
+        run_dir = Path("/runs") / remote_run
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+            archive.write(run_dir / "manifest.json", "source-manifest.json")
+            if (run_dir / "curve.csv").exists():
+                archive.write(run_dir / "curve.csv", "curve.csv")
+            inventory = [{"path": str(p.relative_to(run_dir)), "bytes": p.stat().st_size}
+                         for p in sorted((run_dir / "checkpoints").rglob("*")) if p.is_file()]
+            archive.writestr("checkpoints.json", json.dumps(inventory, indent=2) + "\n")
+        return buffer.getvalue()
     out = Path("/runs/evaluation")
     run_dir = out / remote_run
     if not (run_dir / "manifest.json").is_file():
@@ -327,8 +338,11 @@ def main(stage: str = "smoke", env: str = "Go1JoystickFlatTerrain", seed: int = 
         payload = evaluate.remote(provenance, policy, backend, True, initialization)
         target = ROOT / "results" / "getup-diagnostic"
     elif stage == "fetch-eval":
-        payload = fetch_evaluation.remote(remote_run)
+        payload = fetch_artifacts.remote(remote_run)
         target = ROOT / "results" / "eval"
+    elif stage == "fetch-training":
+        payload = fetch_artifacts.remote(remote_run, True)
+        target = ROOT / "results" / "runs" / remote_run
     elif stage == "parity":
         payload = parity.remote(provenance, policy)
         target = ROOT / "results" / "parity"
@@ -348,5 +362,5 @@ def main(stage: str = "smoke", env: str = "Go1JoystickFlatTerrain", seed: int = 
             destination.write_bytes(archive.read(member))
     print(f"Saved {stage} outputs to {target}")
     manifest_path = target / "manifest.json"
-    if manifest_path.exists() and json.loads(manifest_path.read_text()).get("status") == "failed":
+    if stage != "fetch-training" and manifest_path.exists() and json.loads(manifest_path.read_text()).get("status") == "failed":
         raise RuntimeError(f"Run failed; see {manifest_path}")

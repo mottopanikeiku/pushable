@@ -66,6 +66,8 @@ def export_model(env_name, env, root):
     restored = mujoco.MjModel.from_xml_path(str(target))
     checks = {}
     for name in dir(env.mj_model):
+        if name.startswith("_") or name.endswith("_pathadr"):
+            continue  # Allocation sizes and resource-string offsets change when paths move.
         original = getattr(env.mj_model, name)
         if not isinstance(original, np.ndarray) or original.dtype.kind not in "biuf" or not original.size:
             continue
@@ -86,6 +88,7 @@ def export_model(env_name, env, root):
         "source_xml": str(env.xml_path).split("mujoco_playground/")[-1],
         "export": "Original XML includes flattened, resource paths relocated, runtime options/gains applied; source numeric tokens preserved",
         "model_array_max_abs_errors": checks,
+        "comparison_scope": "All nonempty public numeric arrays except resource path-string offsets; paths and private allocation sizes necessarily change with relocation",
         "files": {str(p.relative_to(target.parent)): hashlib.sha256(p.read_bytes()).hexdigest()
                   for p in sorted(target.parent.rglob("*")) if p.is_file() and p.suffix != ".json"},
     }

@@ -25,7 +25,9 @@ image = (
     .uv_pip_install("uv==0.12.5")
     .add_local_file(ROOT / "pyproject.toml", "/opt/project/pyproject.toml", copy=True)
     .add_local_file(ROOT / "uv.lock", "/opt/project/uv.lock", copy=True)
-    .run_commands("cd /opt/project && uv export --frozen --extra cuda --no-dev --no-hashes -o /opt/requirements.txt && uv pip install --system -r /opt/requirements.txt")
+    .run_commands("cd /opt/project && uv export --frozen "
+                  + ("--extra cuda " if GPU != "none" else "")
+                  + "--no-dev --no-hashes -o /opt/requirements.txt && uv pip install --system -r /opt/requirements.txt")
     .run_commands(
         "git clone --filter=blob:none --sparse https://github.com/google-deepmind/mujoco_menagerie.git /opt/menagerie && "
         "git -C /opt/menagerie sparse-checkout set unitree_go1 unitree_g1 && "

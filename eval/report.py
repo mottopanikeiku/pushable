@@ -644,7 +644,7 @@ def update_readme(root, tables, spend):
     path = root / "README.md"
     text = path.read_text()
     if "<!-- generated:headline:start -->" not in text:
-        return
+        raise ValueError("README has no generated publication blocks")
     ablation = next((r for r in tables["ablation"] if r["backend"] == "mujoco" and r["three_seed_protocol"]), None)
     getup = next((r for r in tables["getup"] if r["backend"] == "mujoco" and r["seed"] == "all"
                   and r["three_seed_protocol"]), None)
@@ -826,7 +826,6 @@ def generate_report(inputs, output, *, bootstrap_replicates=BOOTSTRAP_REPLICATES
                          "MJX comparisons use trained seed 0 only.",
                          "Missing suites and seeds are not imputed; see completeness columns."]}
     (output / "summary.json").write_text(json.dumps(summary, indent=2, allow_nan=False) + "\n")
-    update_readme(Path(__file__).resolve().parents[1], tables, spend)
     return summary
 
 
@@ -836,9 +835,13 @@ def main():
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--bootstrap-replicates", type=int, default=BOOTSTRAP_REPLICATES)
     parser.add_argument("--bootstrap-seed", type=int, default=BOOTSTRAP_SEED)
+    parser.add_argument("--update-readme", action="store_true",
+                        help="Update published README measurements; requires the complete experiment")
     args = parser.parse_args()
     summary = generate_report(args.inputs, args.output, bootstrap_replicates=args.bootstrap_replicates,
                               bootstrap_seed=args.bootstrap_seed)
+    if args.update_readme:
+        update_readme(Path(__file__).resolve().parents[1], summary["tables"], summary["spend"])
     print(f'{summary["trial_count"]} raw trials; report written to {args.output}')
 
 

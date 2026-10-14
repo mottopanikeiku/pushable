@@ -293,17 +293,17 @@ def export_checkpoint(provenance, remote_run, checkpoint_steps):
 
 @app.function(image=image, gpu=None if GPU == "none" else GPU, cpu=CPU,
               memory=MEMORY, timeout=TIMEOUT, max_containers=1, volumes={"/runs": volume})
-def evaluate(provenance, policy="", backend="mujoco", diagnostic=False, initialization="drop",
-             source_run="", tracking_only=False):
+def evaluate(provenance, policy="", backend="mujoco", mode="full", initialization="drop", source_run=""):
     if GPU == "none":
         os.environ["JAX_PLATFORMS"] = "cpu"
-    provenance = {**provenance, "modal_app_id": app.app_id, "gpu": GPU}
+    provenance = {**provenance, "modal_app_id": app.app_id, "gpu": GPU, "evaluation_mode": mode}
     setup_playground()
     from contextlib import ExitStack
     from tempfile import TemporaryDirectory
     import shutil
     from eval.run import SuiteConfig, run_suite
-    out = Path("/runs/policy-checks" if tracking_only else "/runs/getup-diagnostic" if diagnostic else "/runs/evaluation")
+    out = Path("/runs") / {"full": "evaluation", "getup": "getup-diagnostic",
+                          "tracking": "policy-checks", "gap": "evaluation"}[mode]
     out.mkdir(exist_ok=True)
     with ExitStack() as cleanup:
         root = Path("/workspace")
@@ -316,8 +316,10 @@ def evaluate(provenance, policy="", backend="mujoco", diagnostic=False, initiali
             shutil.copyfile(Path("/runs") / source_run / "policies" / f"{policy}.json",
                             root / "policies" / f"{policy}.json")
             provenance["source_training_run"] = source_run
-        config = SuiteConfig(suites=("tracking",)) if tracking_only else None
-        if diagnostic:
+        config = SuiteConfig(suites=("tracking",)) if mode == "tracking" else None
+        if mode == "gap":
+            config = SuiteConfig(seeds=(0,), suites=("tracking", "push"), push_trials=20)
+        if mode == "getup":
             spec = json.loads((root / "policies" / f"{policy}.json").read_text())
             if spec["task"] != "getup" or spec["seed"] != 0 or initialization not in ("drop", "upstream"):
                 raise ValueError("Getup diagnosis requires seed0 and drop/upstream initialization")
@@ -410,13 +412,16 @@ def main(stage: str = "smoke", env: str = "Go1JoystickFlatTerrain", seed: int = 
         payload = export_checkpoint.remote(provenance, remote_run, checkpoint_steps)
         target = ROOT / "results" / "runs" / run_id
     elif stage == "check-policy":
-        payload = evaluate.remote(provenance, policy, backend, source_run=remote_run, tracking_only=True)
+        payload = evaluate.remote(provenance, policy, backend, mode="tracking", source_run=remote_run)
         target = ROOT / "results" / "policy-checks"
     elif stage == "eval":
         payload = evaluate.remote(provenance, policy, backend, source_run=remote_run)
         target = ROOT / "results" / "eval"
+    elif stage == "gap":
+        payload = evaluate.remote(provenance, policy, backend, mode="gap", source_run=remote_run)
+        target = ROOT / "results" / "eval"
     elif stage == "getup-diagnostic":
-        payload = evaluate.remote(provenance, policy, backend, True, initialization, remote_run)
+        payload = evaluate.remote(provenance, policy, backend, "getup", initialization, remote_run)
         target = ROOT / "results" / "getup-diagnostic"
     elif stage == "fetch-eval":
         payload = fetch_artifacts.remote(remote_run)

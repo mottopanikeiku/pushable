@@ -155,8 +155,8 @@ export class RobotView {
     this.orbit.update();
   }
 
-  private transform(id: number): void {
-    const d = this.physics!.data, r = d.geom_xmat, p = d.geom_xpos, k = id * 9;
+  private transform(id: number, r: Float64Array, p: Float64Array): void {
+    const k = id * 9;
     this.position.set(p[id * 3], p[id * 3 + 1], p[id * 3 + 2]);
     this.matrix.set(r[k], r[k + 1], r[k + 2], 0,
       r[k + 3], r[k + 4], r[k + 5], 0, r[k + 6], r[k + 7], r[k + 8], 0, 0, 0, 0, 1);
@@ -164,8 +164,9 @@ export class RobotView {
   }
 
   capture(): void {
+    const { geom_xmat: rotations, geom_xpos: positions } = this.physics!.data;
     for (let i = 0; i < this.meshes.length; i++) {
-      this.transform(i);
+      this.transform(i, rotations, positions);
       this.previous[i].position.copy(this.position);
       this.previous[i].rotation.copy(this.rotation);
     }
@@ -173,8 +174,9 @@ export class RobotView {
 
   render(alpha: number): void {
     if (this.physics) {
+      const { geom_xmat: rotations, geom_xpos: positions } = this.physics.data;
       for (let i = 0; i < this.meshes.length; i++) {
-        this.transform(i);
+        this.transform(i, rotations, positions);
         this.meshes[i].position.lerpVectors(this.previous[i].position, this.position, alpha);
         this.meshes[i].quaternion.slerpQuaternions(this.previous[i].rotation, this.rotation, alpha);
       }

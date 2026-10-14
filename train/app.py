@@ -233,26 +233,39 @@ def train_one(env_name, seed, run_id, stage, pushes, provenance, benchmark_secon
 
 @app.function(image=image, gpu=None if GPU == "none" else GPU, cpu=CPU,
               memory=MEMORY, timeout=TIMEOUT, max_containers=1, volumes={"/runs": volume})
-def evaluate(provenance, policy="", backend="mujoco", diagnostic=False, initialization="drop"):
+def evaluate(provenance, policy="", backend="mujoco", diagnostic=False, initialization="drop", source_run=""):
     if GPU == "none":
         os.environ["JAX_PLATFORMS"] = "cpu"
     provenance = {**provenance, "modal_app_id": app.app_id, "gpu": GPU}
     setup_playground()
+    from contextlib import ExitStack
+    from tempfile import TemporaryDirectory
+    import shutil
     from eval.run import SuiteConfig, run_suite
     out = Path("/runs/getup-diagnostic" if diagnostic else "/runs/evaluation")
     out.mkdir(exist_ok=True)
-    config = None
-    if diagnostic:
-        spec = json.loads((Path("/workspace/policies") / f"{policy}.json").read_text())
-        if spec["task"] != "getup" or spec["seed"] != 0 or initialization not in ("drop", "upstream"):
-            raise ValueError("Getup diagnosis requires seed0 and drop/upstream initialization")
-        settle = spec["training_config"]["settle_time"] if initialization == "upstream" else 1.0
-        config = SuiteConfig(seeds=(0,), suites=("getup",), settle_seconds=settle)
-    run_dir = run_suite(root=Path("/workspace"), output=out, backend=backend, config=config,
-                        policy_filter=policy or None, provenance=provenance,
-                        getup_initialization=initialization)
+    with ExitStack() as cleanup:
+        root = Path("/workspace")
+        if source_run:
+            if Path(source_run).name != source_run or not policy or Path(policy).name != policy:
+                raise ValueError("Historical evaluation requires one run ID and policy stem")
+            root = Path(cleanup.enter_context(TemporaryDirectory()))
+            (root / "assets").symlink_to("/workspace/assets", target_is_directory=True)
+            (root / "policies").mkdir()
+            shutil.copyfile(Path("/runs") / source_run / "policies" / f"{policy}.json",
+                            root / "policies" / f"{policy}.json")
+            provenance["source_training_run"] = source_run
+        config = None
+        if diagnostic:
+            spec = json.loads((root / "policies" / f"{policy}.json").read_text())
+            if spec["task"] != "getup" or spec["seed"] != 0 or initialization not in ("drop", "upstream"):
+                raise ValueError("Getup diagnosis requires seed0 and drop/upstream initialization")
+            settle = spec["training_config"]["settle_time"] if initialization == "upstream" else 1.0
+            config = SuiteConfig(seeds=(0,), suites=("getup",), settle_seconds=settle)
+        run_dir = run_suite(root=root, output=out, backend=backend, config=config,
+                           policy_filter=policy or None, provenance=provenance,
+                           getup_initialization=initialization)
     import gzip
-    import shutil
     for path in list(run_dir.rglob("trials.jsonl")) + list(run_dir.rglob("trials.csv")):
         with path.open("rb") as source, gzip.open(path.with_suffix(path.suffix + ".gz"), "wb") as destination:
             shutil.copyfileobj(source, destination)
@@ -263,7 +276,7 @@ def evaluate(provenance, policy="", backend="mujoco", diagnostic=False, initiali
 
 @app.function(image=image, cpu=CPU, memory=MEMORY, timeout=TIMEOUT,
               max_containers=1, volumes={"/runs": volume})
-def fetch_artifacts(remote_run, training=False):
+def fetch_artifacts(remote_run, training=False, diagnostic=False):
     """Download committed diagnostics without repeating training or simulation."""
     if not remote_run or Path(remote_run).name != remote_run:
         raise ValueError("remote_run must name one run directory")
@@ -278,7 +291,7 @@ def fetch_artifacts(remote_run, training=False):
                          for p in sorted((run_dir / "checkpoints").rglob("*")) if p.is_file()]
             archive.writestr("checkpoints.json", json.dumps(inventory, indent=2) + "\n")
         return buffer.getvalue()
-    out = Path("/runs/evaluation")
+    out = Path("/runs/getup-diagnostic" if diagnostic else "/runs/evaluation")
     run_dir = out / remote_run
     if not (run_dir / "manifest.json").is_file():
         matches = [p.parent for p in out.glob("*/manifest.json")
@@ -332,10 +345,10 @@ def main(stage: str = "smoke", env: str = "Go1JoystickFlatTerrain", seed: int = 
         payload = assets.remote(provenance)
         target = ROOT
     elif stage == "eval":
-        payload = evaluate.remote(provenance, policy, backend)
+        payload = evaluate.remote(provenance, policy, backend, source_run=remote_run)
         target = ROOT / "results" / "eval"
     elif stage == "getup-diagnostic":
-        payload = evaluate.remote(provenance, policy, backend, True, initialization)
+        payload = evaluate.remote(provenance, policy, backend, True, initialization, remote_run)
         target = ROOT / "results" / "getup-diagnostic"
     elif stage == "fetch-eval":
         payload = fetch_artifacts.remote(remote_run)
@@ -343,6 +356,9 @@ def main(stage: str = "smoke", env: str = "Go1JoystickFlatTerrain", seed: int = 
     elif stage == "fetch-training":
         payload = fetch_artifacts.remote(remote_run, True)
         target = ROOT / "results" / "runs" / remote_run
+    elif stage == "fetch-getup-diagnostic":
+        payload = fetch_artifacts.remote(remote_run, diagnostic=True)
+        target = ROOT / "results" / "getup-diagnostic"
     elif stage == "parity":
         payload = parity.remote(provenance, policy)
         target = ROOT / "results" / "parity"

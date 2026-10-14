@@ -36,6 +36,8 @@ The environment's episode limit is 6 s, but Brax also explicitly resets training
 
 `train/launch.py getup-diagnostic --policy go1-getup-s0 --backend mjx --gpu L4 --minutes 30 --initialization drop` measures the original drop protocol in Warp; select `upstream` for the training reset distribution, or `--backend mujoco --gpu none` for C physics. Longer getup training, if needed after this comparison, changes only `--num-timesteps`; the demo uses seed 0 of the final documented configuration, not the best-performing seed or checkpoint. Original measurements and curves remain committed.
 
+`--remote-run <training-run-id>` evaluates that run's stored policy from the Volume, even after a newer configuration replaces the browser export. The policy hash and original training-run ID remain in the evaluation manifest. `fetch-getup-diagnostic --remote-run <diagnostic-launch-id>` retrieves persisted diagnostic trials without repeating them.
+
 The same report command writes `getup_diagnostic.csv`, with the original/revised training-run IDs, both initialization distributions, backend, counts, success rate, median recovery time, and trial-bootstrap intervals for the single tested seed. Historical results kept for this comparison are labelled in their manifests; they are not pooled with the final configuration.
 
 ## Go1 ablation and uncertainty

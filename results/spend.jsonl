@@ -69,3 +69,5 @@
 {"event": "end", "id": "pushable-1791970574961", "time": "2026-10-14T02:37:15", "wall_minutes": 1.01, "charged_upper": 0.0029, "exit": 0}
 {"event": "start", "id": "pushable-1791970808288", "time": "2026-10-14T02:40:08", "project": "pushable", "gpu": "none", "gpus_per_container": 1, "containers": 1, "cores": 2.0, "mem_gib": 8.0, "minutes": 2.0, "booked": 0.0058, "command": ["modal", "run", "train/app.py", "--stage", "fetch-training", "--env", "Go1JoystickFlatTerrain", "--seed", "0", "--run-id", "fetch-g1-walk-s0-progress", "--remote-run", "g1-walk-s0"]}
 {"event": "end", "id": "pushable-1791970808288", "time": "2026-10-14T02:40:23", "wall_minutes": 0.25, "charged_upper": 0.0007, "exit": 0}
+{"event": "end", "id": "pushable-1791970400750", "time": "2026-10-14T03:03:34", "wall_minutes": 30.23, "charged_upper": 0.5307, "exit": 1}
+{"event": "end", "id": "pushable-1791970400749", "time": "2026-10-14T03:05:21", "wall_minutes": 32.01, "charged_upper": 0.5618, "exit": 0}

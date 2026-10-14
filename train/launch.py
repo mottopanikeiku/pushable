@@ -13,7 +13,7 @@ RATES = {"none": 0, "L4": 0.7992, "A100-40GB": 2.0988, "H100": 3.9492}
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("stage", choices=["assets", "smoke", "benchmark", "train", "eval", "parity", "fetch-eval", "fetch-training", "getup-diagnostic"])
+    parser.add_argument("stage", choices=["assets", "smoke", "benchmark", "train", "eval", "parity", "fetch-eval", "fetch-training", "getup-diagnostic", "fetch-getup-diagnostic"])
     parser.add_argument("--gpu", choices=list(RATES), default="L4")
     parser.add_argument("--minutes", type=float, default=5)
     parser.add_argument("--cores", type=float, default=2)

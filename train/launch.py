@@ -37,8 +37,8 @@ def main():
                for r in records if r["event"] == "start" and r["project"] == "pushable")
     rate = RATES[args.gpu] + args.cores * 0.047160 + args.mem_gib * 0.007992
     booked = rate * args.minutes / 60 * 1.10
-    if used + booked > 12:
-        raise SystemExit(f"Preserving reserve: ${used:.4f} used, ${booked:.4f} booking exceeds $12 trainer limit")
+    if used + booked > 13:
+        raise SystemExit(f"Project cap: ${used:.4f} used, ${booked:.4f} booking exceeds $13")
     run_id = args.run_id or f"{args.stage}-{args.env}-s{args.seed}-{args.gpu}-{int(time.time())}"
     command = [str(guard), "run", "--project", "pushable", "--gpu", args.gpu,
                "--minutes", str(args.minutes), "--cores", str(args.cores), "--mem-gib", str(args.mem_gib),

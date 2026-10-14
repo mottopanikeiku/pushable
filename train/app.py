@@ -55,8 +55,10 @@ def setup_playground():
 
 def packages():
     import importlib.metadata
-    return {name: importlib.metadata.version(name) for name in
-            ("mujoco", "mujoco-mjx", "jax", "jaxlib", "brax", "flax", "numpy", "playground", "warp-lang", "modal")}
+    import platform
+    return {"python": platform.python_version(), **{
+        name: importlib.metadata.version(name) for name in
+        ("mujoco", "mujoco-mjx", "mujoco-warp", "jax", "jaxlib", "brax", "flax", "numpy", "playground", "warp-lang", "modal")}}
 
 
 def archive_files(paths, root):
@@ -114,12 +116,16 @@ def train_one(env_name, seed, run_id, stage, pushes, provenance, benchmark_secon
         config.update(num_timesteps=1280, num_envs=64, batch_size=64,
                       num_minibatches=1, num_evals=2, num_resets_per_eval=1,
                       num_eval_envs=16)
+    import inspect
+    defaults = {name: parameter.default for name, parameter in inspect.signature(ppo.train).parameters.items()
+                if parameter.default is not inspect.Parameter.empty and not callable(parameter.default)}
     manifest = {
         **provenance, "id": run_id, "env": env_name, "seed": seed, "stage": stage,
         "gpu": GPU, "cpu": CPU, "memory_mib": MEMORY,
         "playground_commit": PLAYGROUND_COMMIT, "menagerie_commit": MENAGERIE_COMMIT,
         "versions": packages(), "environment_config": cfg.to_dict(),
         "ppo_config": json.loads(json.dumps(config)), "upstream_ppo_config": original,
+        "ppo_effective_config": {**defaults, **config, "seed": seed},
         "domain_randomization": False, "domain_randomization_reason": "Upstream train_jax_ppo CLI default is false",
         "modal_app_id": app.app_id, "status": "running",
     }

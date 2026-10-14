@@ -1,5 +1,6 @@
 import type { MainModule, MjModel } from '@mujoco/mujoco';
 import { mountFile, type Physics, type Vec3 } from './physics';
+import { addTerrain } from './terrain';
 
 // Separate collision channels: training floor/feet 1, robot bumpers 2,
 // play objects 4, and a props-only floor 8. Nothing changes the training XML.
@@ -58,7 +59,9 @@ export function mountPlayScene(mj: MainModule, path: string): string {
   try {
     const xml = new TextDecoder().decode(mj.FS.readFile(`/${path}`));
     const destination = path.replace(/\.xml$/, '.play.xml');
-    mountFile(mj, destination, new TextEncoder().encode(composeScene(mj, xml, model)));
+    const rough = new TextDecoder().decode(mj.FS.readFile('/assets/go1/rough.xml'));
+    const scene = addTerrain(composeScene(mj, xml, model), rough, model.nhfield > 0);
+    mountFile(mj, destination, new TextEncoder().encode(scene));
     return destination;
   } finally { model.delete(); }
 }

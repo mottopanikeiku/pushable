@@ -7,7 +7,7 @@ Walking robots you can shove, live in your browser. I trained the policies with 
 ![The Go1 dog is shoved over and gets back up; then the G1 humanoid walks](web/media/hero.gif)
 
 <!-- generated:headline:start -->
-**Does training with random shoves make the dog harder to knock over?** Yes. The shove it survives half the time (J50) rises from 22.7–26.8 N·s to 31.3–35.8 N·s: **+8.8 N·s, 95% interval +4.6 to +13.1**, three seeds per arm. [Comparison](results/report/ablation.csv)
+**Does training with random shoves make the dog harder to knock over?** Yes. The shove it survives half the time (J50) rises from 24.1 to 32.9 N·s with three seeds per arm pooled (per seed: 22.7–26.8 vs 31.3–35.8 N·s): **+8.8 N·s, 95% interval +4.6 to +13.1**. [Comparison](results/report/ablation.csv)
 <!-- generated:headline:end -->
 
 Tasks, rewards and PPO settings are from [MuJoCo Playground](https://github.com/google-deepmind/mujoco_playground/tree/d59156e099a8785dd58fbce2e25a6ee1f7b5800c); robot models from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie/tree/1b86ece576591213e2b666ebf59508454200ca97) (licenses in [assets](assets/)); training uses [Brax](https://github.com/google/brax/tree/v0.14.2) PPO. I trained and evaluated the policies, ran the push experiment and wrote the browser runtime.

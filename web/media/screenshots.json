@@ -1,7 +1,7 @@
 {
   "source": "Production Vite preview, /pushable/?record=1",
-  "source_commit": "5123569dbdb45c5f243202d34e33b9cdb8a7794e",
-  "runtime_bundle": "index-Dv2vdQRi.js",
+  "source_commit": "97c0c61",
+  "runtime_bundle": "index-CYiXKTQK.js",
   "browser": "Headless Chrome 153, software rendering (--disable-gpu)",
   "mujoco": "3.15.0",
   "visible_geom_groups": [
@@ -97,14 +97,14 @@
       ],
       "policy": "go1-walk-rough-s0",
       "color_scheme_preference": "light",
-      "measured_speed_m_s": 0.51,
+      "measured_speed_m_s": 0.53,
       "state": {
         "time": 1.0000000000000007,
         "robot": "go1",
         "task": "walk",
         "control_dt": 0.02,
-        "height": 0.3206910368278687,
-        "up": 0.9993264119658827
+        "height": 0.3184367775586927,
+        "up": 0.9991925869873997
       }
     },
     "rough-mobile.png": {
@@ -114,14 +114,48 @@
       ],
       "policy": "go1-walk-rough-s0",
       "color_scheme_preference": "dark",
-      "measured_speed_m_s": 0.51,
+      "measured_speed_m_s": 0.53,
       "state": {
         "time": 1.0000000000000007,
         "robot": "go1",
         "task": "walk",
         "control_dt": 0.02,
-        "height": 0.3206910368278687,
-        "up": 0.9993264119658827
+        "height": 0.3184367775586927,
+        "up": 0.9991925869873997
+      }
+    },
+    "go1-desktop-dark.png": {
+      "viewport": [
+        1280,
+        800
+      ],
+      "policy": "go1-walk-s0",
+      "color_scheme_preference": "dark",
+      "measured_speed_m_s": 0.37,
+      "state": {
+        "time": 1.0000000000000007,
+        "robot": "go1",
+        "task": "walk",
+        "control_dt": 0.02,
+        "height": 0.3073288287494456,
+        "up": 0.999857548824581
+      }
+    },
+    "go1-mobile-light.png": {
+      "viewport": [
+        390,
+        844
+      ],
+      "policy": "go1-walk-s0",
+      "color_scheme_preference": "light",
+      "measured_speed_m_s": 0.37,
+      "state": {
+        "time": 1.0000000000000007,
+        "robot": "go1",
+        "task": "walk",
+        "control_dt": 0.02,
+        "height": 0.3073288287494456,
+        "up": 0.999857548824581
       }
     }
   },
@@ -143,12 +177,12 @@
       "direction": "world +Y"
     },
     "state": {
-      "time": 5.019999999999669,
+      "time": 4.999999999999671,
       "robot": "g1",
       "task": "fallen",
       "control_dt": 0.02,
-      "height": 0.1270155900709884,
-      "up": -0.13463173781331217
+      "height": 0.09678097080918402,
+      "up": -0.1966010787049104
     },
     "message": "G1 has no get-up policy. Reset to walk again."
   },
@@ -236,15 +270,15 @@
   "scope": "Light and dark captures use their actual palettes. Viewport emulation is not physical phone hardware. These simulation-time captures do not measure hardware FPS or recovery reliability.",
   "frame_rate_sample": {
     "measurement": "MEAS",
-    "frames": 120,
-    "elapsed_ms": 27332.2,
-    "mean_fps": 4.3904259444903815,
-    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "frames": 60,
+    "elapsed_ms": 15699.399999999998,
+    "mean_fps": 3.8218021070868957,
+    "visibility": "visible",
     "viewport": [
       1280,
       800
     ],
-    "policy": "go1-walk-push-s0",
-    "scope": "Headless software renderer on shared host; not laptop GPU or physical phone benchmark"
-  }
+    "scope": "Headless SwiftShader on shared host, not laptop GPU or physical phone"
+  },
+  "control_checks_source": "5123569 (unchanged controls; environmental revision rechecked at both sizes and both themes)"
 }

@@ -1,6 +1,6 @@
 {
-  "recorded_at": "2026-10-14T19:21:19.856Z",
-  "git_sha": "5123569dbdb45c5f243202d34e33b9cdb8a7794e",
+  "recorded_at": "2026-10-14T19:43:04.817Z",
+  "git_sha": "97c0c618a5ad323df18d004452bcf31ff494b13c",
   "dirty": true,
   "cadence": "One control step per frame, encoded in simulation time; capture wall time is not playback time.",
   "ffmpeg_version": "ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers",
@@ -41,17 +41,17 @@
       "robot": "go1",
       "task": "getup",
       "control_dt": 0.02,
-      "height": 0.16637303684871455,
-      "up": 0.4494595581934603
+      "height": 0.16846668344131907,
+      "up": 0.452722351759537
     },
     {
-      "frame": 185,
-      "time": 3.720000000000003,
+      "frame": 192,
+      "time": 3.860000000000003,
       "robot": "go1",
       "task": "walk",
       "control_dt": 0.02,
-      "height": 0.28897034561477675,
-      "up": 0.9980129370451727
+      "height": 0.27609108465645965,
+      "up": 0.9985497914153396
     },
     {
       "frame": 450,
@@ -131,10 +131,10 @@
     }
   },
   "bytes": {
-    "mp4": 1183788,
-    "gif": 1282868
+    "mp4": 1135568,
+    "gif": 1614304
   },
-  "wall_seconds": 282.789,
+  "wall_seconds": 143.311,
   "ffmpeg_mp4": [
     "nice",
     "-n",

@@ -38,6 +38,8 @@ The optional `mjx` runner uses the same exported model, deterministic actor, obs
 
 Warp model preparation uses Playground's `mjx_env.put_model`, including its default warning options. Only arrays needed by the actor and tracking metrics cross back to NumPy; contacts and capacity checks stay on the GPU. A GPU parity check compares this small state transfer against MuJoCo's full `get_data_into` conversion for all copied arrays, observations, and body velocities. The initial GPU invocation timed out while copying full contact buffers and emitting iteration-limit warnings that training does not enable; its partial trials are retained and excluded.
 
+Each parity invocation uses its own Volume directory, so concurrent policy checks do not share report files. The sensor-stage test copies native data before Warp conversion, which otherwise calls kinematics in place, and restores the original cached site matrices for the identical-field comparison.
+
 ## Running and reporting
 
 The trainer launches standard C MuJoCo evaluation on Modal CPU and the optional MJX Warp comparison on Modal GPU. Run locally only for code inspection; no local evaluation is required. Remote containers should set `OMP_NUM_THREADS=1`, `OPENBLAS_NUM_THREADS=1`, `MKL_NUM_THREADS=1`, and `NUMEXPR_NUM_THREADS=1` before importing NumPy. The runner also sets these variables for CLI use. The commands below are container entrypoints, not replacements for the trainer's Modal spend guard.

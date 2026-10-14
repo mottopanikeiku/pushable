@@ -181,10 +181,15 @@ def _check_sensor_stage(artifact, metrics):
     info = dict(initial.info)
     is_g1 = policy.spec["robot"] == "g1"
     get_obs = jax.jit(lambda data, info: _get_observation(env, data, info, is_g1))
+    copied = mujoco.MjData(sim.model)
     for _ in range(8):
         result = sim.step()
-        # put_data carries both integrated qpos/qvel and the existing sensor stage.
-        data = mjx.put_data(env.mj_model, sim.data, impl=env._config.impl)
+        # Warp put_data calls mj_kinematics on its input. Do not mutate the
+        # native rollout or replace its cached, pre-integration site frame.
+        mujoco.mj_copyData(copied, sim.model, sim.data)
+        site_xmat = jp.asarray(sim.data.site_xmat).reshape((-1, 3, 3))
+        data = mjx.put_data(env.mj_model, copied, impl=env._config.impl)
+        data = data.replace(site_xmat=site_xmat)
         info["last_act"] = jp.asarray(sim.observation_last_action)
         if policy.spec["task"] == "walk":
             info["command"] = jp.asarray(sim.command)

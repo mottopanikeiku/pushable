@@ -277,8 +277,8 @@ def parity(provenance, policy=""):
     from eval.test_parity import check_policy
     from train.export import write_parity_fixture
     root = Path("/workspace")
-    out = Path("/runs/parity")
-    out.mkdir(exist_ok=True)
+    out = Path("/runs") / provenance["run_id"] / "parity"
+    out.mkdir(parents=True, exist_ok=True)
     selected = sorted((root / "policies").glob(f"{policy or '*-s0'}.json"))
     if not selected:
         raise ValueError("No matching policy artifacts")

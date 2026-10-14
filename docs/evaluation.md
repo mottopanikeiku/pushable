@@ -40,6 +40,8 @@ The first Warp training-reset diagnostic reached 182 trials before its time limi
 
 `--remote-run <training-run-id>` evaluates that run's stored policy from the Volume, even after a newer configuration replaces the browser export. The policy hash and original training-run ID remain in the evaluation manifest. `fetch-getup-diagnostic --remote-run <diagnostic-launch-id>` retrieves persisted diagnostic trials without repeating them.
 
+For the interrupted G1 run, `export-checkpoint --remote-run g1-walk-s0 --checkpoint-steps 181043200` exports the last persisted checkpoint without further optimization. Its manifest links the original full configuration and curve. `check-policy --policy g1-walk-s0 --gpu none` runs the fixed 27-command C-MuJoCo tracking grid before accepting it for the demo; these checks live in `results/policy-checks/`, separate from the final full evaluation.
+
 The same report command writes `getup_diagnostic.csv`, with the original/revised training-run IDs, both initialization distributions, backend, counts, success rate, median recovery time, and trial-bootstrap intervals for the single tested seed. Historical results kept for this comparison are labelled in their manifests; they are not pooled with the final configuration.
 
 ## Go1 ablation and uncertainty

@@ -568,7 +568,8 @@ def getup_diagnostic_table(root, rng, replicates):
         manifest_path = path.parent / "manifest.json"
         manifest = json.loads(manifest_path.read_text())
         invocation = json.loads((path.parent.parent.parent / "manifest.json").read_text())
-        if manifest.get("status") != "complete" or invocation.get("status") != "complete":
+        complete = manifest.get("status") == "complete" and invocation.get("status") == "complete"
+        if not complete and not invocation.get("keep_in_diagnostics"):
             continue
         if (manifest.get("superseded") or invocation.get("superseded")) and not invocation.get("keep_in_diagnostics"):
             continue
@@ -587,6 +588,7 @@ def getup_diagnostic_table(root, rng, replicates):
         ci = _interval(_bootstrap_outcomes({0: outcomes}, rng, replicates))
         result.append({
             "run_id": manifest["run_id"], "training_run_id": metadata["spec"]["run_id"],
+            "complete": complete,
             "policy_sha256": metadata["policy_sha256"], "backend": manifest["backend"],
             "initialization": invocation.get("getup_initialization", "drop"), "seed": 0,
             "trials": len(trials), "successes": sum(outcomes), "success": float(np.mean(outcomes)),
@@ -628,7 +630,7 @@ def generate_report(inputs, output, *, bootstrap_replicates=BOOTSTRAP_REPLICATES
     columns = {
         "training": ("id", "env", "seed", "gpu", "minutes", "usd_upper", "final_reward",
                      "requested_steps", "trained_steps", "explicit_reset_interval_seconds"),
-        "getup_diagnostic": ("run_id", "training_run_id", "policy_sha256", "backend", "initialization", "seed",
+        "getup_diagnostic": ("run_id", "training_run_id", "complete", "policy_sha256", "backend", "initialization", "seed",
                             "trials", "successes", "success", "nominal_trials", "nominal_successes",
                             "dropped_trials", "dropped_successes", "ci_low", "ci_high", "median_recovery_seconds",
                             "software_failures", "raw"),

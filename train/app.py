@@ -233,7 +233,68 @@ def train_one(env_name, seed, run_id, stage, pushes, provenance, benchmark_secon
 
 @app.function(image=image, gpu=None if GPU == "none" else GPU, cpu=CPU,
               memory=MEMORY, timeout=TIMEOUT, max_containers=1, volumes={"/runs": volume})
-def evaluate(provenance, policy="", backend="mujoco", diagnostic=False, initialization="drop", source_run=""):
+def export_checkpoint(provenance, remote_run, checkpoint_steps):
+    """Export a specified persisted checkpoint without resuming optimization."""
+    if not remote_run or Path(remote_run).name != remote_run or checkpoint_steps <= 0:
+        raise ValueError("A training run ID and positive checkpoint step are required")
+    setup_playground()
+    import traceback
+    from ml_collections import ConfigDict
+    from brax.training.agents.ppo import checkpoint
+    from mujoco_playground import registry
+    from train.assets import MODEL_PATHS
+    from train.export import _config_numbers, _json, export_policy
+
+    started = time.monotonic()
+    source = Path("/runs") / remote_run
+    training = json.loads((source / "manifest.json").read_text())
+    with (source / "curve.csv").open() as stream:
+        row = next(row for row in csv.DictReader(stream) if int(row["steps"]) == checkpoint_steps)
+    checkpoint_path = source / "checkpoints" / f"{checkpoint_steps:012d}"
+    out = Path("/runs") / provenance["run_id"]
+    out.mkdir(parents=True, exist_ok=False)
+    manifest = {
+        **provenance, "id": provenance["run_id"], "stage": "export-checkpoint",
+        "env": training["env"], "seed": training["seed"], "gpu": GPU,
+        "cpu": CPU, "memory_mib": MEMORY, "versions": packages(),
+        "modal_app_id": app.app_id, "training_source": training,
+        "checkpoint_path": str(checkpoint_path.relative_to(Path("/runs"))),
+        "checkpoint_steps": checkpoint_steps,
+        "planned_steps": training["ppo_config"]["num_timesteps"],
+        "final_reward": float(row["eval/episode_reward"]), "status": "running",
+    }
+    manifest_path = out / "manifest.json"
+    manifest_path.write_text(json.dumps(_json(manifest), indent=2) + "\n")
+    volume.commit()
+    try:
+        cfg = ConfigDict(_config_numbers(training["environment_config"]))
+        env = registry.load(training["env"], config=cfg)
+        params = checkpoint.load(str(checkpoint_path))
+        robot = "g1" if training["env"].startswith("G1") else "go1"
+        task = "getup" if training["env"] == "Go1Getup" else "walk"
+        destination = out / "policies" / f"{robot}-{task}-s{training['seed']}.json"
+        spec = export_policy(training["env"], env, params, destination, training["seed"],
+                             MODEL_PATHS[training["env"]], PLAYGROUND_COMMIT, provenance["run_id"])
+        spec["training_checkpoint"] = {
+            "run_id": remote_run, "steps": checkpoint_steps,
+            "planned_steps": training["ppo_config"]["num_timesteps"],
+            "selection": "Latest persisted checkpoint after the training time limit; not best-reward selection",
+        }
+        destination.write_text(json.dumps(_json(spec), indent=2) + "\n")
+        manifest["status"] = "complete"
+    except Exception:
+        manifest["status"] = "failed"
+        manifest["error"] = traceback.format_exc()
+    manifest["wall_seconds"] = time.monotonic() - started
+    manifest_path.write_text(json.dumps(_json(manifest), indent=2) + "\n")
+    volume.commit()
+    return archive_files([manifest_path, *list((out / "policies").glob("*.json"))], out)
+
+
+@app.function(image=image, gpu=None if GPU == "none" else GPU, cpu=CPU,
+              memory=MEMORY, timeout=TIMEOUT, max_containers=1, volumes={"/runs": volume})
+def evaluate(provenance, policy="", backend="mujoco", diagnostic=False, initialization="drop",
+             source_run="", tracking_only=False):
     if GPU == "none":
         os.environ["JAX_PLATFORMS"] = "cpu"
     provenance = {**provenance, "modal_app_id": app.app_id, "gpu": GPU}
@@ -242,7 +303,7 @@ def evaluate(provenance, policy="", backend="mujoco", diagnostic=False, initiali
     from tempfile import TemporaryDirectory
     import shutil
     from eval.run import SuiteConfig, run_suite
-    out = Path("/runs/getup-diagnostic" if diagnostic else "/runs/evaluation")
+    out = Path("/runs/policy-checks" if tracking_only else "/runs/getup-diagnostic" if diagnostic else "/runs/evaluation")
     out.mkdir(exist_ok=True)
     with ExitStack() as cleanup:
         root = Path("/workspace")
@@ -255,7 +316,7 @@ def evaluate(provenance, policy="", backend="mujoco", diagnostic=False, initiali
             shutil.copyfile(Path("/runs") / source_run / "policies" / f"{policy}.json",
                             root / "policies" / f"{policy}.json")
             provenance["source_training_run"] = source_run
-        config = None
+        config = SuiteConfig(suites=("tracking",)) if tracking_only else None
         if diagnostic:
             spec = json.loads((root / "policies" / f"{policy}.json").read_text())
             if spec["task"] != "getup" or spec["seed"] != 0 or initialization not in ("drop", "upstream"):
@@ -333,7 +394,8 @@ def parity(provenance, policy=""):
 @app.local_entrypoint()
 def main(stage: str = "smoke", env: str = "Go1JoystickFlatTerrain", seed: int = 0,
          run_id: str = "", pushes: bool = False, policy: str = "", backend: str = "mujoco",
-         remote_run: str = "", num_timesteps: int = 0, initialization: str = "drop"):
+         remote_run: str = "", num_timesteps: int = 0, initialization: str = "drop",
+         checkpoint_steps: int = 0):
     if not run_id:
         run_id = f"{stage}-{env}-s{seed}-{int(time.time())}"
     provenance = {
@@ -344,6 +406,12 @@ def main(stage: str = "smoke", env: str = "Go1JoystickFlatTerrain", seed: int = 
     if stage == "assets":
         payload = assets.remote(provenance)
         target = ROOT
+    elif stage == "export-checkpoint":
+        payload = export_checkpoint.remote(provenance, remote_run, checkpoint_steps)
+        target = ROOT / "results" / "runs" / run_id
+    elif stage == "check-policy":
+        payload = evaluate.remote(provenance, policy, backend, source_run=remote_run, tracking_only=True)
+        target = ROOT / "results" / "policy-checks"
     elif stage == "eval":
         payload = evaluate.remote(provenance, policy, backend, source_run=remote_run)
         target = ROOT / "results" / "eval"

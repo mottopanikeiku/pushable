@@ -13,7 +13,7 @@ RATES = {"none": 0, "L4": 0.7992, "A100-40GB": 2.0988, "H100": 3.9492}
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("stage", choices=["assets", "smoke", "benchmark", "train", "eval", "parity", "fetch-eval", "fetch-training", "getup-diagnostic", "fetch-getup-diagnostic"])
+    parser.add_argument("stage", choices=["assets", "smoke", "benchmark", "train", "eval", "parity", "fetch-eval", "fetch-training", "getup-diagnostic", "fetch-getup-diagnostic", "export-checkpoint", "check-policy"])
     parser.add_argument("--gpu", choices=list(RATES), default="L4")
     parser.add_argument("--minutes", type=float, default=5)
     parser.add_argument("--cores", type=float, default=2)
@@ -27,6 +27,7 @@ def main():
     parser.add_argument("--remote-run", default="")
     parser.add_argument("--num-timesteps", type=int, default=0)
     parser.add_argument("--initialization", choices=["drop", "upstream"], default="drop")
+    parser.add_argument("--checkpoint-steps", type=int, default=0)
     args = parser.parse_args()
     project = Path(os.environ.get("RL_WAVE_HOME", Path.home() / "Projects/rl-wave"))
     guard = project / "bin/rl-modal"
@@ -56,6 +57,8 @@ def main():
         command.extend(["--num-timesteps", str(args.num_timesteps)])
     if args.initialization != "drop":
         command.extend(["--initialization", args.initialization])
+    if args.checkpoint_steps:
+        command.extend(["--checkpoint-steps", str(args.checkpoint_steps)])
     env = dict(os.environ, PUSHABLE_GPU=args.gpu, PUSHABLE_TIMEOUT=str(int(args.minutes * 60)),
                PUSHABLE_CPU=str(args.cores), PUSHABLE_MEMORY=str(args.mem_gib * 1024),
                OMP_NUM_THREADS="2", OPENBLAS_NUM_THREADS="1", MKL_NUM_THREADS="1")

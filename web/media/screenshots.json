@@ -8,5 +8,10 @@
     "go1-desktop.png": [1280, 800],
     "go1-mobile.png": [390, 844]
   },
+  "color_scheme_preference": {
+    "go1-desktop.png": "light",
+    "go1-mobile.png": "dark"
+  },
+  "ground_grid_spacing_m": 0.5,
   "scope": "These screenshots show Go1 walking only; they are not evidence of successful learned recovery, G1 behavior, or hardware frame rate."
 }

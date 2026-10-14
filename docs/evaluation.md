@@ -42,6 +42,8 @@ The first Warp training-reset diagnostic reached 182 trials before its time limi
 
 For the interrupted G1 run, `export-checkpoint --remote-run g1-walk-s0 --checkpoint-steps 181043200` exports the last persisted checkpoint without further optimization. Its manifest links the original full configuration and curve. `check-policy --policy g1-walk-s0 --gpu none` runs the fixed 27-command C-MuJoCo tracking grid before accepting it for the demo; these checks live in `results/policy-checks/`, separate from the final full evaluation.
 
+G1 seeds 1 and 2 retain the default 200M-step configuration and each has a 60-minute L4 time limit. Seed 0 is not retrained or replaced. The three-seed results disclose its shorter completed training budget alongside the full runs in `training.csv`; G1 is not a same-duration seed comparison.
+
 The same report command writes `getup_diagnostic.csv`, with the original/revised training-run IDs, both initialization distributions, backend, counts, success rate, median recovery time, and trial-bootstrap intervals for the single tested seed. Historical results kept for this comparison are labelled in their manifests; they are not pooled with the final configuration.
 
 ## Go1 ablation and uncertainty

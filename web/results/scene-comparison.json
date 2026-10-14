@@ -1,13 +1,13 @@
 {
   "measurement": "MEAS",
   "runtime": "Node v22.23.1, MuJoCo 3.15.0 WASM",
-  "source_commit": "7bfea924b0838de3481cc06953a52c4b8dc8453a",
+  "source_commit": "5123569dbdb45c5f243202d34e33b9cdb8a7794e",
   "hashes": {
     "web/src/physics.ts": "4335a2674930e7a240ef5d6c523a162b57543a49430604759f75f3b1ca6fe943",
     "web/src/policy.ts": "6cdebdb78d84917d01280910777faef1a7a4c3e8a009fdb7bfbbde8b9b0980a7",
     "web/src/playground.ts": "5c9313753ef540369f3c0435bc641e5742d70ba056f520344fa7b1fcdae50707",
     "web/src/terrain.ts": "32cab9786388c098a936a50d84d77c301354dce9f9f36f01e6e6c8937415e612",
-    "web/scripts/compare-scenes.ts": "fd945aefbba18c6045fa9e7e195acfa819185e717f1ff6482bff4f99ea7a9c25",
+    "web/scripts/compare-scenes.ts": "a8e25b494130bf2a7424c119e8519b1e5e320e6c936f95d51e6603c3449ffc15",
     "policies/go1-walk-s0.json": "42138b2b29663a8f72575af7354ab59b60f381446ee9e4ec2b45d83a0881a982",
     "assets/go1/walk.xml": "5f9e9cbae6732c9da3a6b6db9d6d48529ed7652d2c23ae5bda69f9191b7f162f",
     "assets/go1/walk.comparison.xml": "38309e62fba1b0942a0d9e9dcbba0886648c3de58483025e3df16973586cc62a",
@@ -16,6 +16,7 @@
     "assets/go1/rough.xml": "998f40f6a46737552d7e88593bfb31eb7a4c4483d1a740c12cbb815017887487",
     "assets/go1/rough.comparison.xml": "4624848cc3722db05efd468db72ea2de17f36b4638364c27145bea705575ee33"
   },
+  "source_dirty": true,
   "protocol": {
     "commands": "zero and signed axis endpoints: 7 of the 27 tracking commands, fixed before running",
     "episode_seconds": 10,

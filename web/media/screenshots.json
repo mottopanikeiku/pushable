@@ -1,44 +1,250 @@
 {
   "source": "Production Vite preview, /pushable/?record=1",
-  "source_commit": "bee05901ffad6064d210ba7749c63c23fe622500",
-  "runtime_bundle": "index-wvb5bxsm.js",
-  "browser": "Headless Chrome 153.0.8010.12, SwiftShader",
+  "source_commit": "5123569dbdb45c5f243202d34e33b9cdb8a7794e",
+  "runtime_bundle": "index-Dv2vdQRi.js",
+  "browser": "Headless Chrome 153, software rendering (--disable-gpu)",
   "mujoco": "3.15.0",
-  "visible_geom_groups": [0, 1, 2],
+  "visible_geom_groups": [
+    0,
+    1,
+    2
+  ],
   "policies": {
     "go1-walk-s0": "42138b2b29663a8f72575af7354ab59b60f381446ee9e4ec2b45d83a0881a982",
-    "g1-walk-s0": "dda8313218d529924982f6e2b3f77cb5f1892a9137b08cfe6323fef1fa772038"
+    "g1-walk-s0": "dda8313218d529924982f6e2b3f77cb5f1892a9137b08cfe6323fef1fa772038",
+    "go1-walk-rough-s0": "ff3e23520b9a929351b7e4de7079dd77f3ab933a7b265829f14c0cce49946a17"
   },
-  "command": [0.5, 0, 0],
+  "command": [
+    0.5,
+    0,
+    0
+  ],
   "control_steps": 50,
   "control_dt": 0.02,
   "screenshots": {
     "go1-desktop.png": {
-      "viewport": [1280, 800],
+      "viewport": [
+        1280,
+        800
+      ],
       "policy": "go1-walk-s0",
       "color_scheme_preference": "light",
-      "measured_speed_m_s": 0.39
+      "measured_speed_m_s": 0.37,
+      "state": {
+        "time": 1.0000000000000007,
+        "robot": "go1",
+        "task": "walk",
+        "control_dt": 0.02,
+        "height": 0.3073288287494456,
+        "up": 0.999857548824581
+      }
     },
     "go1-mobile.png": {
-      "viewport": [390, 844],
+      "viewport": [
+        390,
+        844
+      ],
       "policy": "go1-walk-s0",
       "color_scheme_preference": "dark",
-      "measured_speed_m_s": 0.39
+      "measured_speed_m_s": 0.37,
+      "state": {
+        "time": 1.0000000000000007,
+        "robot": "go1",
+        "task": "walk",
+        "control_dt": 0.02,
+        "height": 0.3073288287494456,
+        "up": 0.999857548824581
+      }
     },
     "g1-desktop.png": {
-      "viewport": [1280, 800],
+      "viewport": [
+        1280,
+        800
+      ],
       "policy": "g1-walk-s0",
       "color_scheme_preference": "light",
-      "measured_speed_m_s": 0.45
+      "measured_speed_m_s": 0.45,
+      "state": {
+        "time": 1.0000000000000007,
+        "robot": "g1",
+        "task": "walk",
+        "control_dt": 0.02,
+        "height": 0.755528445953902,
+        "up": 0.9959346713136673
+      }
     },
     "g1-mobile.png": {
-      "viewport": [390, 844],
+      "viewport": [
+        390,
+        844
+      ],
       "policy": "g1-walk-s0",
       "color_scheme_preference": "dark",
-      "measured_speed_m_s": 0.45
+      "measured_speed_m_s": 0.45,
+      "state": {
+        "time": 1.0000000000000007,
+        "robot": "g1",
+        "task": "walk",
+        "control_dt": 0.02,
+        "height": 0.755528445953902,
+        "up": 0.9959346713136673
+      }
+    },
+    "rough-desktop.png": {
+      "viewport": [
+        1280,
+        800
+      ],
+      "policy": "go1-walk-rough-s0",
+      "color_scheme_preference": "light",
+      "measured_speed_m_s": 0.51,
+      "state": {
+        "time": 1.0000000000000007,
+        "robot": "go1",
+        "task": "walk",
+        "control_dt": 0.02,
+        "height": 0.3206910368278687,
+        "up": 0.9993264119658827
+      }
+    },
+    "rough-mobile.png": {
+      "viewport": [
+        390,
+        844
+      ],
+      "policy": "go1-walk-rough-s0",
+      "color_scheme_preference": "dark",
+      "measured_speed_m_s": 0.51,
+      "state": {
+        "time": 1.0000000000000007,
+        "robot": "go1",
+        "task": "walk",
+        "control_dt": 0.02,
+        "height": 0.3206910368278687,
+        "up": 0.9993264119658827
+      }
+    }
+  },
+  "fall_screenshot": {
+    "file": "g1-fallen-mobile.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "policy": "g1-walk-s0",
+    "command": [
+      0.5,
+      0,
+      0
+    ],
+    "shove": {
+      "time": 1,
+      "impulse_Ns": 100,
+      "direction": "world +Y"
+    },
+    "state": {
+      "time": 5.019999999999669,
+      "robot": "g1",
+      "task": "fallen",
+      "control_dt": 0.02,
+      "height": 0.1270155900709884,
+      "up": -0.13463173781331217
+    },
+    "message": "G1 has no get-up policy. Reset to walk again."
+  },
+  "feature_checks": [
+    {
+      "viewport": [
+        1280,
+        800
+      ],
+      "inspector_bars": 60,
+      "throw_key_and_button": true,
+      "push_locked": true,
+      "help": true,
+      "rough_title_cleared": true
+    },
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "inspector_bars": 60,
+      "throw_key_and_button": true,
+      "push_locked": true,
+      "help": true,
+      "rough_title_cleared": true
+    }
+  ],
+  "live_controls": {
+    "results": [
+      {
+        "viewport": [
+          1280,
+          800
+        ],
+        "focusedSteering": "1.50",
+        "shortcut_not_cancelled": true,
+        "turn": null,
+        "touch": null,
+        "drag": true,
+        "reset_releases_drag": true
+      },
+      {
+        "viewport": [
+          390,
+          844
+        ],
+        "focusedSteering": "1.50",
+        "shortcut_not_cancelled": true,
+        "turn": {
+          "command": "Input 47: 1.200 (1.84 normalized)"
+        },
+        "touch": "0.94",
+        "drag": true,
+        "reset_releases_drag": true
+      }
+    ],
+    "landscape": {
+      "height": 390,
+      "buttons": [
+        {
+          "id": "push",
+          "top": 292,
+          "bottom": 336
+        },
+        {
+          "id": "throw",
+          "top": 292,
+          "bottom": 336
+        },
+        {
+          "id": "slow",
+          "top": 292,
+          "bottom": 336
+        },
+        {
+          "id": "reset",
+          "top": 292,
+          "bottom": 336
+        }
+      ]
     }
   },
   "ground_grid_spacing_m": 0.5,
   "browser_console_errors": [],
-  "scope": "The page retains its light palette under both system color preferences. These captures show one simulated second of walking with each seed-0 policy; they do not measure hardware frame rate or recovery reliability."
+  "scope": "Light and dark captures use their actual palettes. Viewport emulation is not physical phone hardware. These simulation-time captures do not measure hardware FPS or recovery reliability.",
+  "frame_rate_sample": {
+    "measurement": "MEAS",
+    "frames": 120,
+    "elapsed_ms": 27332.2,
+    "mean_fps": 4.3904259444903815,
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "viewport": [
+      1280,
+      800
+    ],
+    "policy": "go1-walk-push-s0",
+    "scope": "Headless software renderer on shared host; not laptop GPU or physical phone benchmark"
+  }
 }

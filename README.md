@@ -55,9 +55,9 @@ Each run used one NVIDIA L4 on Modal: 12–14 minutes and $0.22–0.25 per dog w
 
 - Simulation only; nothing here ran on a real robot.
 - The walking models simulate only foot contacts, as in Playground, so a fall is judged by tilt rather than by the body hitting the ground.
-- One of three get-up seeds never learned to get up; I report it rather than retrain it.
+- One of three get-up seeds rarely gets up (3 of 187 fallen starts); I report it rather than retrain it.
 - The humanoid tracks turning commands poorly. Its seed 0 stopped at 181M of 200M planned steps on a time limit (seeds 1 and 2 finished), and the demo uses that checkpoint.
-- Demo policies were fixed in advance (seed 0 of each policy), not picked by results.
+- Demo seeds were fixed in advance (seed 0 of each policy); the final get-up training settings were chosen after a first configuration failed ([see docs](docs/evaluation.md)).
 
 ## Prior work
 

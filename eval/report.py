@@ -738,7 +738,7 @@ def getup_diagnostic_table(root, rng, replicates):
 
 
 def update_readme(root, tables, spend):
-    """Regenerate the publication's three measured blocks from report tables."""
+    """Regenerate measured publication text from report tables."""
     path = root / "README.md"
     text = path.read_text()
     ablation = next((r for r in tables["ablation"] if r["backend"] == "mujoco" and r["three_seed_protocol"]), None)
@@ -843,6 +843,13 @@ def update_readme(root, tables, spend):
         before, _, remainder = text.partition(start)
         _, _, after = remainder.partition(end)
         text = before + start + "\n" + content + "\n" + end + after
+    limit_prefix = f"- {words[len(weak)].capitalize()} of {words[len(getup_seeds)]} get-up seeds "
+    limits = [line for line in text.splitlines() if line.startswith(limit_prefix)]
+    if len(limits) != 1:
+        raise ValueError("README must contain one get-up limitation")
+    text = text.replace(limits[0], limit_prefix +
+                        f"rarely gets up ({weak[0]['successes']} of {weak[0]['trials']} fallen starts); "
+                        "I report it rather than retrain it.")
     path.write_text(text)
 
 

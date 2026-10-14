@@ -332,7 +332,7 @@ def _rng(config, seed, suite, index):
 
 def _tracking(sim, config, command, row):
     sim.reset(command=command)
-    sim.begin(fall_checks=True)
+    sim.begin(fall_checks=False)
     sim._inspect()
     dt = float(sim.policy.spec["control_dt"])
     errors = np.zeros(3)

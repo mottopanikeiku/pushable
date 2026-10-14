@@ -192,6 +192,7 @@ def train_one(env_name, seed, run_id, stage, pushes, provenance, benchmark_secon
             )
             config["network_factory"] = network_config
             manifest["final_reward"] = float(metrics.get("eval/episode_reward", float("nan")))
+            manifest["trained_steps"] = curve[-1]["steps"] if curve else 0
             if stage == "train":
                 from train.export import export_policy
                 export_model(env_name, env, out)

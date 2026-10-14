@@ -36,6 +36,8 @@ image = (
         "mkdir -p /opt/licenses && cp /opt/playground-license/LICENSE /opt/licenses/LICENSE-Playground && rm -rf /opt/playground-license",
     )
     .env({
+        "PUSHABLE_GPU": GPU, "PUSHABLE_TIMEOUT": str(TIMEOUT),
+        "PUSHABLE_CPU": str(CPU), "PUSHABLE_MEMORY": str(MEMORY),
         "PYTHONPATH": "/workspace", "OMP_NUM_THREADS": "2", "OPENBLAS_NUM_THREADS": "1",
         "MKL_NUM_THREADS": "1", "MUJOCO_GL": "egl",
         "JAX_COMPILATION_CACHE_DIR": "/runs/cache/jax",
@@ -122,6 +124,7 @@ def train_one(env_name, seed, run_id, stage, pushes, provenance, benchmark_secon
     manifest = {
         **provenance, "id": run_id, "env": env_name, "seed": seed, "stage": stage,
         "gpu": GPU, "cpu": CPU, "memory_mib": MEMORY,
+        "devices": [{"platform": d.platform, "kind": d.device_kind} for d in jax.devices()],
         "playground_commit": PLAYGROUND_COMMIT, "menagerie_commit": MENAGERIE_COMMIT,
         "versions": packages(), "environment_config": cfg.to_dict(),
         "ppo_config": json.loads(json.dumps(config)), "upstream_ppo_config": original,
@@ -289,6 +292,8 @@ def main(stage: str = "smoke", env: str = "Go1JoystickFlatTerrain", seed: int = 
             if relative.is_absolute() or ".." in relative.parts:
                 raise ValueError("Invalid archive path")
             destination = ROOT / relative if relative.parts[0] == "policies" else target / relative
+            if stage == "parity" and relative.name == "checks.json":
+                destination = ROOT / "results" / "parity-checks" / f"{run_id}.json"
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes(archive.read(member))
     print(f"Saved {stage} outputs to {target}")

@@ -74,17 +74,27 @@ def archive_files(paths, root):
 @app.function(image=image, cpu=CPU, memory=MEMORY, timeout=TIMEOUT,
               max_containers=1, volumes={"/runs": volume})
 def assets(provenance):
+    started = time.monotonic()
     os.environ["JAX_PLATFORMS"] = "cpu"
     setup_playground()
     from mujoco_playground import registry
     from train.assets import export_model, MODEL_PATHS
-    out = Path("/runs/export")
+    from train.export import _json
+    out = Path("/runs") / provenance["run_id"] / "export"
+    configs = {}
     for name in MODEL_PATHS:
         # Model parameters do not depend on the implementation; CPU avoids CUDA initialization.
         env = registry.load(name, config_overrides={"impl": "jax"})
         export_model(name, env, out)
+        configs[name] = env._config.to_dict()
+    manifest = {**provenance, "id": provenance["run_id"], "stage": "assets", "status": "complete",
+                "modal_app_id": app.app_id, "gpu": "none", "versions": packages(),
+                "environment_configs": configs, "wall_seconds": time.monotonic() - started}
+    manifest_path = out / "results/runs" / provenance["run_id"] / "manifest.json"
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(json.dumps(_json(manifest), indent=2, allow_nan=False) + "\n")
     volume.commit()
-    return archive_files([p for p in (out / "assets").rglob("*") if p.is_file()], out)
+    return archive_files([p for p in (out / "assets").rglob("*") if p.is_file()] + [manifest_path], out)
 
 
 @app.function(image=image, gpu=None if GPU == "none" else GPU, cpu=CPU,
@@ -271,6 +281,7 @@ def main(stage: str = "smoke", env: str = "Go1JoystickFlatTerrain", seed: int = 
     if not run_id:
         run_id = f"{stage}-{env}-s{seed}-{int(time.time())}"
     provenance = {
+        "run_id": run_id,
         "git_sha": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
         "git_dirty": bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT, text=True).strip()),
     }

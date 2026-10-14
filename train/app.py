@@ -70,6 +70,7 @@ def archive_files(paths, root):
 @app.function(image=image, cpu=CPU, memory=MEMORY, timeout=TIMEOUT,
               max_containers=1, volumes={"/runs": volume})
 def assets(provenance):
+    os.environ["JAX_PLATFORMS"] = "cpu"
     setup_playground()
     from mujoco_playground import registry
     from train.assets import export_model, MODEL_PATHS
@@ -207,6 +208,8 @@ def train_one(env_name, seed, run_id, stage, pushes, provenance, benchmark_secon
 @app.function(image=image, cpu=CPU, memory=MEMORY, timeout=TIMEOUT,
               max_containers=1, volumes={"/runs": volume})
 def evaluate(provenance, policy="", backend="mujoco"):
+    os.environ["JAX_PLATFORMS"] = "cpu"
+    provenance = {**provenance, "modal_app_id": app.app_id}
     setup_playground()
     from eval.run import run_suite
     out = Path("/runs/evaluation")
@@ -215,6 +218,33 @@ def evaluate(provenance, policy="", backend="mujoco"):
               policy_filter=policy or None, provenance=provenance)
     volume.commit()
     return archive_files([p for p in out.rglob("*") if p.is_file()], out)
+
+
+@app.function(image=image, gpu=None if GPU == "none" else GPU, cpu=CPU,
+              memory=MEMORY, timeout=TIMEOUT, max_containers=1, volumes={"/runs": volume})
+def parity(provenance, policy=""):
+    if GPU == "none":
+        os.environ["JAX_PLATFORMS"] = "cpu"
+    setup_playground()
+    from eval.test_parity import check_policy
+    from train.export import write_parity_fixture
+    root = Path("/workspace")
+    out = Path("/runs/parity")
+    out.mkdir(exist_ok=True)
+    selected = sorted((root / "policies").glob(f"{policy or '*-s0'}.json"))
+    if not selected:
+        raise ValueError("No matching policy artifacts")
+    started = time.monotonic()
+    report = {**provenance, "modal_app_id": app.app_id, "versions": packages(), "checks": {}}
+    for path in selected:
+        spec = json.loads(path.read_text())
+        raw = Path("/runs") / spec["run_id"] / "policies" / path.with_suffix(".brax").name
+        report["checks"][path.stem] = check_policy(path, raw, root=root, impl="jax")
+        write_parity_fixture(path, out / f"{path.stem}.json", root=root, steps=200)
+    report["wall_seconds"] = time.monotonic() - started
+    (out / "checks.json").write_text(json.dumps(report, indent=2) + "\n")
+    volume.commit()
+    return archive_files([p for p in out.iterdir() if p.is_file()], out)
 
 
 @app.local_entrypoint()
@@ -232,6 +262,9 @@ def main(stage: str = "smoke", env: str = "Go1JoystickFlatTerrain", seed: int = 
     elif stage == "eval":
         payload = evaluate.remote(provenance, policy, backend)
         target = ROOT / "results" / "eval"
+    elif stage == "parity":
+        payload = parity.remote(provenance, policy)
+        target = ROOT / "results" / "parity"
     else:
         payload = train_one.remote(env, seed, run_id, stage, pushes, provenance)
         target = ROOT / "results" / "runs" / run_id

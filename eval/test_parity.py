@@ -211,6 +211,27 @@ def _check_velocity_frame(artifact, metrics, root=ROOT):
     _assert_close(metrics, "velocity_frame_max_abs", sim.velocity(), expected)
 
 
+def _check_warp_state_transfer(artifact, metrics, root):
+    from eval.run import MJXTrialSimulator, SuiteConfig
+    from eval.sim import observation_from_data
+
+    sim = MJXTrialSimulator(artifact[0], root, SuiteConfig())
+    sim.reset(command=(0.5, 0, 0))
+    sim.step()
+    full = mujoco.MjData(sim.model)
+    mjx.get_data_into(full, sim.model, sim._mjx_data)
+    expected = observation_from_data(sim.model, full, sim.spec,
+        sim.observation_last_action, sim.command, sim.observation_phase)
+    _assert_close(metrics, "warp_transfer_observation_max_abs", sim.observe(), expected)
+    velocity = np.empty(6)
+    mujoco.mj_objectVelocity(sim.model, full, mujoco.mjtObj.mjOBJ_XBODY,
+                            sim.base_id, velocity, 1)
+    _assert_close(metrics, "warp_transfer_velocity_max_abs", sim.velocity(), velocity)
+    for name in sim._host_fields:
+        _assert_close(metrics, f"warp_transfer_{name}_max_abs",
+                      getattr(sim.data, name), getattr(full, name))
+
+
 def check_policy(policy_path, brax_path, root=Path("."), *, impl="jax"):
     """Run the same real-artifact comparisons as pytest; raise on any mismatch."""
     root = Path(root)
@@ -227,6 +248,8 @@ def check_policy(policy_path, brax_path, root=Path("."), *, impl="jax"):
     _check_step_timing(artifact, metrics)
     _check_sensor_stage(artifact, metrics)
     _check_velocity_frame(artifact, metrics, root)
+    if impl == "warp":
+        _check_warp_state_transfer(artifact, metrics, root)
     return metrics
 
 

@@ -39,6 +39,8 @@ Go1 hands falls to its get-up model and returns after a steady stance. [`recover
 - **Reset after failed loading left disabled actions and the wrong selection:** reset now restores the loaded policy and controls together.
 - **Browser shortcuts steered:** missing modifier checks. Ctrl/Cmd/Alt combinations are left alone.
 - **Repeated Push truncated impulses:** replacing unfinished pulses. Push now locks until delivery finishes.
+- **Compressed downloads reported 100% too soon:** decoded bytes were divided by compressed length. Encoded responses now show bytes with indeterminate progress until complete.
+- **Dark active controls had weak contrast:** white text on pale green. Active buttons and contact badges now use dark ink in the dark theme.
 - **Prop coordinates entered motor controls:** free bodies extend qpos. Reset copies only actuated robot coordinates.
 
 ## Rendering and media

@@ -174,7 +174,9 @@ async function fetchData(path: string): Promise<Response> {
 async function boot(): Promise<void> {
   const response = await fetch(wasmUrl);
   if (!response.ok) throw new Error(`Could not load physics (${response.status})`);
-  const length = Number(response.headers.get('content-length'));
+  // Fetch streams decoded bytes; compressed Content-Length is not their total.
+  const encoding = response.headers.get('content-encoding');
+  const length = !encoding || encoding === 'identity' ? Number(response.headers.get('content-length')) : 0;
   const reader = response.body!.getReader();
   const chunks: Uint8Array[] = [];
   let received = 0;
@@ -184,8 +186,9 @@ async function boot(): Promise<void> {
     chunks.push(value);
     received += value.length;
     if (length) progress.value = Math.min(100, received * 100 / length);
-    element<HTMLElement>('load-detail').textContent = `${(received / 1048576).toFixed(1)} MB · physics`;
+    element<HTMLElement>('load-detail').textContent = `${(received / 1048576).toFixed(1)} MiB · physics`;
   }
+  progress.value = 100;
   const binary = new Uint8Array(received);
   let offset = 0;
   for (const chunk of chunks) { binary.set(chunk, offset); offset += chunk.length; }

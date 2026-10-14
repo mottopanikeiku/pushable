@@ -149,7 +149,7 @@ export class RobotView {
   private resize(): void {
     const { width, height } = this.canvas.getBoundingClientRect();
     this.renderer.setSize(width, height, false);
-    const framing = Math.max(1, 0.9 * height / width) / Math.max(1, 0.9 / this.camera.aspect);
+    const framing = Math.max(1, 0.7 * height / width) / Math.max(1, 0.7 / this.camera.aspect);
     this.camera.position.sub(this.orbit.target).multiplyScalar(framing).add(this.orbit.target);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
